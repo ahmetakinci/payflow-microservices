@@ -1,3 +1,10 @@
+# IntelliJ
+.idea/
+*.iml
+
+# Maven build çıktısı
+target/
+
 # Compiled class file
 *.class
 
