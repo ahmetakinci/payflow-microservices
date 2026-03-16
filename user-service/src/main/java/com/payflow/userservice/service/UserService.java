@@ -1,17 +1,17 @@
 package com.payflow.userservice.service;
 
 import com.payflow.userservice.dto.RegisterRequest;
-import com.payflow.userservice.entity.User;
+import com.payflow.userservice.dto.UserResponse;
 
 import java.util.List;
 
 public interface UserService {
 
-    User register(RegisterRequest request);
+    UserResponse register(RegisterRequest request);
 
-    List<User> findAll();
+    List<UserResponse > findAll();
 
-    User findById(long id);
+    UserResponse findById(long id);
 
     void deleteById(long id);
 
