@@ -15,10 +15,6 @@
     <!-- Alt modüller -->
     <modules>
         <module>user-service</module>
-        <module>account-service</module>
-        <module>payment-service</module>
-        <module>notification-service</module>
-        <module>api-gateway</module>
     </modules>
 
     <!-- Tüm servislerin Spring Boot'tan miras alması -->
