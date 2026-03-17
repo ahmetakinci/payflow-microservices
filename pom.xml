@@ -15,6 +15,7 @@
     <!-- Alt modüller -->
     <modules>
         <module>user-service</module>
+        <module>account-service</module>
     </modules>
 
     <!-- Tüm servislerin Spring Boot'tan miras alması -->
