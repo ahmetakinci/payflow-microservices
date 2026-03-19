@@ -7,13 +7,13 @@ spring:
 
   security:
     user:
-      name: admin
-      password: admin
+     name: ${SECURITY_USER:admin}
+     password: ${SECURITY_PASSWORD:admin}
 
   datasource:
     url: jdbc:postgresql://localhost:5432/payflow_user
-    username: postgres
-    password: postgres
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
 
   jpa:

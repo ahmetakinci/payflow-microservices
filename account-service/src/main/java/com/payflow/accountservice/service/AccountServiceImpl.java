@@ -1,9 +1,12 @@
 package com.payflow.accountservice.service;
 
+import com.payflow.accountservice.client.UserServiceClient;
 import com.payflow.accountservice.dto.AccountResponse;
 import com.payflow.accountservice.dto.CreateAccountRequest;
 import com.payflow.accountservice.entity.Account;
 import com.payflow.accountservice.exception.AccountNotFoundException;
+import com.payflow.accountservice.exception.AccountNumberGenerationException;
+import com.payflow.accountservice.exception.UserNotFoundException;
 import com.payflow.accountservice.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,10 +20,17 @@ import java.util.Random;
 public class AccountServiceImpl implements AccountService {
 
     private final AccountRepository accountRepository;
+    private final UserServiceClient userServiceClient;
+
     private static final int MAX_ATTEMPTS = 10;
+    private static final Random RANDOM = new Random();
 
     @Override
     public AccountResponse createAccount(CreateAccountRequest request) {
+        if (!userServiceClient.userExists(request.getUserId())) {
+            throw new UserNotFoundException(request.getUserId());
+        }
+
         String accountNumber = generateAccountNumber();
 
         Account account = Account.builder()
@@ -54,12 +64,11 @@ public class AccountServiceImpl implements AccountService {
     }
 
     private String generateAccountNumber() {
-        Random random = new Random();
 
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < 16; i++) {
-                sb.append(random.nextInt(10)); // 0-9 arası rakam
+                sb.append(RANDOM.nextInt(10)); // 0-9 arası rakam
             }
             String accountNumber = sb.toString();
 
@@ -67,7 +76,7 @@ public class AccountServiceImpl implements AccountService {
                 return accountNumber;
             }
         }
-        throw new RuntimeException("Could not generate unique account number");
+        throw new AccountNumberGenerationException();
     }
 
     private AccountResponse toResponse(Account account) {
