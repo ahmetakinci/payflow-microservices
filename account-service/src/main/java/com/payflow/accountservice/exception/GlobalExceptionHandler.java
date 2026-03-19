@@ -69,4 +69,15 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UserServiceUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleUserServiceUnavailable(UserServiceUnavailableException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
+                Map.of(
+                        ERROR_KEY, ex.getMessage(),
+                        STATUS_KEY, 503,
+                        TIMESTAMP_KEY, LocalDateTime.now().toString()
+                )
+        );
+    }
+
 }
