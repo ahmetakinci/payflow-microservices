@@ -47,4 +47,26 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                Map.of(
+                        ERROR_KEY, ex.getMessage(),
+                        STATUS_KEY, 404,
+                        TIMESTAMP_KEY, LocalDateTime.now().toString()
+                )
+        );
+    }
+
+    @ExceptionHandler(AccountNumberGenerationException.class)
+    public ResponseEntity<Map<String, Object>> handleAccountNumberGeneration(AccountNumberGenerationException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Map.of(
+                        ERROR_KEY, ex.getMessage(),
+                        STATUS_KEY, 500,
+                        TIMESTAMP_KEY, LocalDateTime.now().toString()
+                )
+        );
+    }
+
 }
