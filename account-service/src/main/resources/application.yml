@@ -6,8 +6,8 @@ spring:
     name: account-service
   security:
     user:
-    name: ${SECURITY_USER:admin}
-    password: ${SECURITY_PASSWORD:admin}
+     name: ${SECURITY_USER:admin}
+     password: ${SECURITY_PASSWORD:admin}
   datasource:
     url: jdbc:postgresql://localhost:5432/payflow_account
     username: ${DB_USERNAME:postgres}
@@ -25,3 +25,12 @@ spring:
 services:
   user-service:
     url: http://localhost:8081
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      userService:
+        sliding-window-size: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        permitted-number-of-calls-in-half-open-state: 3
