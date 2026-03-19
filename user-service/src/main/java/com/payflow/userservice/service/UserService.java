@@ -15,4 +15,5 @@ public interface UserService {
 
     void deleteById(long id);
 
+    boolean existsById(Long id);
 }
