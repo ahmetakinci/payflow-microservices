@@ -16,6 +16,7 @@
     <modules>
         <module>user-service</module>
         <module>account-service</module>
+        <module>payment-service</module>
     </modules>
 
     <!-- Tüm servislerin Spring Boot'tan miras alması -->
