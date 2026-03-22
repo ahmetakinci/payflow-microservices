@@ -41,4 +41,11 @@ public class AccountController {
         accountService.deleteById(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
+
+    @GetMapping("/number/{accountNumber}")
+    public ResponseEntity<AccountResponse> getAccountByNumber(@PathVariable String accountNumber) {
+        return ResponseEntity.ok(accountService.findByAccountNumber(accountNumber));
+    }
+
+
 }

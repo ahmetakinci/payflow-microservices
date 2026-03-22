@@ -6,6 +6,7 @@ import com.payflow.accountservice.dto.CreateAccountRequest;
 import com.payflow.accountservice.entity.Account;
 import com.payflow.accountservice.exception.AccountNotFoundException;
 import com.payflow.accountservice.exception.AccountNumberGenerationException;
+import com.payflow.accountservice.exception.InsufficientBalanceException;
 import com.payflow.accountservice.exception.UserNotFoundException;
 import com.payflow.accountservice.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -90,4 +91,34 @@ public class AccountServiceImpl implements AccountService {
                 .build();
     }
 
+    @Override
+    public AccountResponse findByAccountNumber(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+        return toResponse(account);
+    }
+
+    @Override
+    public void debit(String accountNumber, BigDecimal amount) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+
+        if (amount.compareTo(account.getBalance()) > 0){
+            throw new InsufficientBalanceException(accountNumber);
+        }
+
+        account.setBalance(account.getBalance().subtract(amount));
+
+        accountRepository.save(account);
+    }
+
+    @Override
+    public void credit(String accountNumber, BigDecimal amount) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+
+        account.setBalance(account.getBalance().add(amount));
+
+        accountRepository.save(account);
+    }
 }
