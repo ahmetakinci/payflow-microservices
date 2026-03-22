@@ -3,15 +3,23 @@ package com.payflow.accountservice.service;
 import com.payflow.accountservice.dto.AccountResponse;
 import com.payflow.accountservice.dto.CreateAccountRequest;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface AccountService {
 
-    AccountResponse createAccount (CreateAccountRequest request);
+    AccountResponse createAccount(CreateAccountRequest request);
 
     AccountResponse findById(Long id);
 
     List<AccountResponse> findByUserId(Long userId);
 
     void deleteById(Long id);
+
+    AccountResponse findByAccountNumber(String accountNumber);
+
+    void debit(String accountNumber, BigDecimal amount);
+
+    void credit(String accountNumber, BigDecimal amount);
+
 }

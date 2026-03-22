@@ -80,4 +80,14 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<Map<String, Object>> insufficientBalanceException(InsufficientBalanceException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Map.of(
+                        ERROR_KEY, ex.getMessage(),
+                        STATUS_KEY, 422,
+                        TIMESTAMP_KEY, LocalDateTime.now().toString()
+                )
+        );
+    }
 }
