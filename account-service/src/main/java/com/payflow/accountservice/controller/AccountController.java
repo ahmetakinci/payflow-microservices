@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -47,5 +48,19 @@ public class AccountController {
         return ResponseEntity.ok(accountService.findByAccountNumber(accountNumber));
     }
 
+    @PutMapping("/number/{accountNumber}/debit")
+    public ResponseEntity<Void> debit(
+            @PathVariable String accountNumber,
+            @RequestBody BigDecimal amount) {
+        accountService.debit(accountNumber, amount);
+        return ResponseEntity.noContent().build();
+    }
 
+    @PutMapping("/number/{accountNumber}/credit")
+    public ResponseEntity<Void> credit(
+            @PathVariable String accountNumber,
+            @RequestBody BigDecimal amount) {
+        accountService.credit(accountNumber, amount);
+        return ResponseEntity.noContent().build();
+    }
 }
