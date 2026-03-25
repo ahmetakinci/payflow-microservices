@@ -10,6 +10,8 @@ public interface AccountService {
 
     AccountResponse createAccount(CreateAccountRequest request);
 
+    List<AccountResponse> findAll();
+
     AccountResponse findById(Long id);
 
     List<AccountResponse> findByUserId(Long userId);
