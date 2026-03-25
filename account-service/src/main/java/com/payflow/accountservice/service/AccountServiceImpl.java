@@ -46,6 +46,14 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public List<AccountResponse> findAll() {
+        return accountRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Override
     public AccountResponse findById(Long id) {
         Account findById = accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));
         return toResponse(findById);

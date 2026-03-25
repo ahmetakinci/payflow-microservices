@@ -37,11 +37,56 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccountServiceUnavailableException.class)
-    public ResponseEntity<Map<String, Object>> handleUserServiceUnavailable(AccountServiceUnavailableException ex) {
+    public ResponseEntity<Map<String, Object>> handleAccountServiceUnavailable(AccountServiceUnavailableException ex) {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(
                 Map.of(
                         ERROR_KEY, ex.getMessage(),
                         STATUS_KEY, 503,
+                        TIMESTAMP_KEY, LocalDateTime.now().toString()
+                )
+        );
+    }
+
+    @ExceptionHandler(BalanceNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleBalanceNotFound(BalanceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                Map.of(
+                        ERROR_KEY, ex.getMessage(),
+                        STATUS_KEY, 404,
+                        TIMESTAMP_KEY, LocalDateTime.now().toString()
+                )
+        );
+    }
+
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePaymentNotFound(PaymentNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                Map.of(
+                        ERROR_KEY, ex.getMessage(),
+                        STATUS_KEY, 404,
+                        TIMESTAMP_KEY, LocalDateTime.now().toString()
+                )
+        );
+    }
+
+    @ExceptionHandler(PaymentFailedException.class)
+    public ResponseEntity<Map<String, Object>> handlePaymentFailed(PaymentFailedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                Map.of(
+                        ERROR_KEY, ex.getMessage(),
+                        STATUS_KEY, 400,
+                        TIMESTAMP_KEY, LocalDateTime.now().toString()
+                )
+        );
+    }
+
+
+    @ExceptionHandler(InsufficientBalanceException.class)
+    public ResponseEntity<Map<String, Object>> insufficientBalanceException(InsufficientBalanceException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Map.of(
+                        ERROR_KEY, ex.getMessage(),
+                        STATUS_KEY, 422,
                         TIMESTAMP_KEY, LocalDateTime.now().toString()
                 )
         );
