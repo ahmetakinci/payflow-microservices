@@ -1,6 +1,7 @@
 package com.payflow.paymentservice.service;
 
 import com.payflow.paymentservice.client.AccountServiceClient;
+import com.payflow.paymentservice.dto.PaymentEvent;
 import com.payflow.paymentservice.dto.PaymentResponse;
 import com.payflow.paymentservice.dto.TransferRequest;
 import com.payflow.paymentservice.entity.Payment;
@@ -11,6 +12,7 @@ import com.payflow.paymentservice.exception.PaymentFailedException;
 import com.payflow.paymentservice.exception.PaymentNotFoundException;
 import com.payflow.paymentservice.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -22,6 +24,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final AccountServiceClient accountServiceClient;
+    private final KafkaTemplate<String, PaymentEvent> kafkaTemplate;
 
     @Override
     public PaymentResponse transfer(TransferRequest request) {
@@ -56,6 +59,17 @@ public class PaymentServiceImpl implements PaymentService {
 
         saved.setStatus(PaymentStatus.SUCCESS);
         paymentRepository.save(saved);
+
+        PaymentEvent event = PaymentEvent.builder()
+                .paymentId(saved.getId())
+                .senderAccountNumber(saved.getSenderAccountNumber())
+                .receiverAccountNumber(saved.getReceiverAccountNumber())
+                .amount(saved.getAmount())
+                .status(saved.getStatus().name())
+                .description(saved.getDescription())
+                .build();
+
+        kafkaTemplate.send("payment-events", event);
         return toResponse(saved);
     }
 
