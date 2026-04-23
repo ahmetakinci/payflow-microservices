@@ -4,82 +4,51 @@
 Spring Boot tabanlı mikroservis ödeme sistemi. Öğrenme/portföy projesi.
 
 ## Stack
-- JDK 21, Spring Boot 3.2.0, Spring Cloud 2023.0.0
-- PostgreSQL 16, Apache Kafka (Confluent 7.5.0)
-- Maven 3.9.2 (multi-module), Docker + Docker Compose
-- Lombok, Resilience4j, Spring Security
+JDK 21, Spring Boot 3.2.0, Spring Cloud 2023.0.0, PostgreSQL 16, Kafka (Confluent 7.5.0), Maven 3.9 multi-module, Docker Compose
 
 ## Servisler
-
-| Servis | Port | DB | Açıklama |
+| Servis | Port | DB | Durum |
 |---|---|---|---|
-| user-service | 8081 | payflow_user | User CRUD, BCrypt, JWT henüz yok |
-| account-service | 8082 | payflow_account | Account CRUD, debit/credit, Circuit Breaker |
-| payment-service | 8083 | payflow_payment | Transfer, rollback, Kafka producer |
-| notification-service | 8084 | — | Kafka consumer, log only (email yok) |
-| api-gateway | 8080 | — | **SIRADAKI** — Spring Cloud Gateway, routing, JWT filter |
+| user-service | 8081 | payflow_user | ✓ Tamamlandı |
+| account-service | 8082 | payflow_account | ✓ Tamamlandı |
+| payment-service | 8083 | payflow_payment | ✓ Tamamlandı |
+| notification-service | 8084 | — | ✓ Tamamlandı |
+| api-gateway | 8080 | — | **SIRADAKI** |
 
-## Kullanılan Pattern ve Kavramlar
-- DTO pattern: RegisterRequest, UserResponse, CreateAccountRequest, AccountResponse, TransferRequest, PaymentResponse, PaymentEvent
-- Builder, Singleton (Spring bean), Constructor Injection (@RequiredArgsConstructor)
-- Repository pattern, @RestControllerAdvice global exception handling
-- JPA Auditing (@EnableJpaAuditing + @EntityListeners)
-- Stream API (.map, .filter, .toList())
-- WebClient (.block() ile sync) — RestTemplate değil
-- Database per Service pattern
-- Environment variable ile credential: ${DB_PASSWORD:postgres}
-- HTTP status: 201 Created, 204 No Content, 404, 422, 503
+## Kullanılan Pattern / Kavramlar
+DTO, Builder, Singleton, Constructor Injection, Repository, @RestControllerAdvice, JPA Auditing, Stream API, WebClient (.block()), Database per Service, Circuit Breaker (Resilience4j), Kafka producer/consumer
 
-## Docker Setup (Tam)
-Her şey container içinde çalışır. Tek komutla ayağa kalkar:
+## Docker
+Tüm servisler container'da çalışır. Mac'te başka projeler port tutuyor:
+- PostgreSQL host port: **5434** (5432/5433 başka proje tarafından alınmış)
+- Kafka host port: **29092** (Docker içi: kafka:9092)
 
 ```bash
-docker-compose up --build
+docker compose up --build        # her şeyi başlat
+docker compose up postgres zookeeper kafka   # sadece altyapı
 ```
 
-### Servis URL'leri (Docker içi)
-- postgres: `postgres:5432`
-- kafka: `kafka:9092` (Docker içi), `localhost:29092` (host erişimi)
-- user-service: `user-service:8081`
-- account-service: `account-service:8082`
-- payment-service: `payment-service:8083`
-- notification-service: `notification-service:8084`
-
-### Sadece Altyapıyı Başlat (IntelliJ'den geliştirme için)
-```bash
-docker-compose up postgres zookeeper kafka
-```
-Servisler IntelliJ'den çalıştırılırken Kafka için `localhost:29092` kullan.
-
-## Environment Variables (application.yml override'ları)
-| Değişken | Docker değeri | Yerel default |
+### Env Vars (docker-compose override)
+| Değişken | Docker | Yerel default |
 |---|---|---|
 | DB_HOST | postgres | localhost |
-| DB_USERNAME | postgres | postgres |
-| DB_PASSWORD | postgres | postgres |
+| KAFKA_BOOTSTRAP_SERVERS | kafka:9092 | localhost:29092 |
 | USER_SERVICE_HOST | user-service | localhost |
 | ACCOUNT_SERVICE_HOST | account-service | localhost |
-| KAFKA_BOOTSTRAP_SERVERS | kafka:9092 | localhost:29092 |
+
+## Önemli Notlar
+- Mac'te JDK: sistem 17, Maven 25 kullanıyor → **yerel mvn build çalışmaz** (Lombok uyumsuz). Docker build JDK 21 ile çalışıyor.
+- Lombok fix: root pom.xml'de `annotationProcessorPaths` explicit tanımlandı
+- WebClient'larda `defaultHeaders(setBasicAuth)` var — servisler arası Basic Auth (JWT gelene kadar geçici)
+- TransferRequest alan adları: `senderAccountNumber` / `receiverAccountNumber`
 
 ## Git Workflow
-- Branch stratejisi: `main ← develop ← feature/*`
-- Feature → commit → push → PR → develop merge → develop pull
-- Tüm tamamlanan özellikler merge edildi, develop güncel
-
-
-- Öğreterek ilerle, salt kod üretme
-
-
-- Yanlış/eksik cevaplarda doğrudan düzelt, yaltaklanma
-- Kısa ve öz cevaplar
-- Mevcut mimariyi koru, yeni soyutlama icat etme
+`main ← develop ← feature/*` — feature/docker-full PR'ı develop'a merge edilecek
 
 ## Sıradaki Adımlar
-1. **api-gateway (8080)** — Spring Cloud Gateway, routing, JWT filter ← DEVAM
-2. JWT implementasyonu — user-service login, Gateway token filter
-3. (Opsiyonel) SAGA pattern
-4. (Opsiyonel) Flyway/Liquibase
-5. Unit test — JUnit + Mockito ile ServiceImpl testleri
+1. **api-gateway (8080)** — Spring Cloud Gateway, routing, JWT filter
+2. JWT — user-service login endpoint + Gateway token filter
+3. Unit test — JUnit + Mockito, ServiceImpl testleri
 
 
 
