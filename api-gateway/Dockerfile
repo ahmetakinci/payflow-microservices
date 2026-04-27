@@ -6,12 +6,12 @@ COPY account-service/pom.xml account-service/
 COPY payment-service/pom.xml payment-service/
 COPY notification-service/pom.xml notification-service/
 COPY api-gateway/pom.xml api-gateway/
-RUN mvn dependency:go-offline -pl payment-service -am -q
-COPY payment-service/src payment-service/src
-RUN mvn package -pl payment-service -am -DskipTests -q
+RUN mvn dependency:go-offline -pl api-gateway -am -q
+COPY api-gateway/src api-gateway/src
+RUN mvn package -pl api-gateway -am -DskipTests -q
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/payment-service/target/*.jar app.jar
-EXPOSE 8083
+COPY --from=build /app/api-gateway/target/*.jar app.jar
+EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
