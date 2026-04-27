@@ -5,6 +5,7 @@ COPY user-service/pom.xml user-service/
 COPY account-service/pom.xml account-service/
 COPY payment-service/pom.xml payment-service/
 COPY notification-service/pom.xml notification-service/
+COPY api-gateway/pom.xml api-gateway/
 RUN mvn dependency:go-offline -pl notification-service -am -q
 COPY notification-service/src notification-service/src
 RUN mvn package -pl notification-service -am -DskipTests -q
