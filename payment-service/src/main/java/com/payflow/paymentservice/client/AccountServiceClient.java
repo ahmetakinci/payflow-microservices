@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -22,22 +23,36 @@ public class AccountServiceClient {
     @Value("${services.account-service.url}")
     private String accountServiceUrl;
 
-    public BigDecimal getBalance(String accountNumber) {
+    public AccountResponse getAccount(String accountNumber) {
         CircuitBreaker circuitBreaker = circuitBreakerFactory.create(ACCOUNT_SERVICE);
 
         return circuitBreaker.run(
-                () -> {
-                    AccountResponse response = webClientBuilder
-                            .baseUrl(accountServiceUrl)
-                            .build()
-                            .get()
-                            .uri("/api/accounts/number/{accountNumber}", accountNumber)
-                            .retrieve()
-                            .bodyToMono(AccountResponse.class)
-                            .block();
-                    return response != null ? response.getBalance() : null;
-                },
-                throwable -> fallbackGetBalance()
+                () -> webClientBuilder
+                        .baseUrl(accountServiceUrl)
+                        .build()
+                        .get()
+                        .uri("/internal/accounts/number/{accountNumber}", accountNumber)
+                        .retrieve()
+                        .bodyToMono(AccountResponse.class)
+                        .block(),
+                throwable -> fallbackAccount()
+        );
+    }
+
+    public List<AccountResponse> getAccountsByUser(Long userId) {
+        CircuitBreaker circuitBreaker = circuitBreakerFactory.create(ACCOUNT_SERVICE);
+
+        return circuitBreaker.run(
+                () -> webClientBuilder
+                        .baseUrl(accountServiceUrl)
+                        .build()
+                        .get()
+                        .uri("/internal/accounts/by-user/{userId}", userId)
+                        .retrieve()
+                        .bodyToFlux(AccountResponse.class)
+                        .collectList()
+                        .block(),
+                throwable -> fallbackAccountList()
         );
     }
 
@@ -50,7 +65,7 @@ public class AccountServiceClient {
                             .baseUrl(accountServiceUrl)
                             .build()
                             .put()
-                            .uri("/api/accounts/number/{accountNumber}/debit", accountNumber)
+                            .uri("/internal/accounts/number/{accountNumber}/debit", accountNumber)
                             .bodyValue(amount)
                             .retrieve()
                             .toBodilessEntity()
@@ -58,7 +73,7 @@ public class AccountServiceClient {
                     return null;
                 },
                 throwable -> {
-                    fallbackDebitandCredit();
+                    fallbackVoid();
                     return null;
                 }
         );
@@ -73,7 +88,7 @@ public class AccountServiceClient {
                             .baseUrl(accountServiceUrl)
                             .build()
                             .put()
-                            .uri("/api/accounts/number/{accountNumber}/credit", accountNumber)
+                            .uri("/internal/accounts/number/{accountNumber}/credit", accountNumber)
                             .bodyValue(amount)
                             .retrieve()
                             .toBodilessEntity()
@@ -81,18 +96,21 @@ public class AccountServiceClient {
                     return null;
                 },
                 throwable -> {
-                    fallbackDebitandCredit();
+                    fallbackVoid();
                     return null;
                 }
         );
     }
 
-    private BigDecimal fallbackGetBalance() {
+    private AccountResponse fallbackAccount() {
         throw new AccountServiceUnavailableException();
     }
 
-    private void fallbackDebitandCredit() {
+    private List<AccountResponse> fallbackAccountList() {
         throw new AccountServiceUnavailableException();
     }
 
+    private void fallbackVoid() {
+        throw new AccountServiceUnavailableException();
+    }
 }

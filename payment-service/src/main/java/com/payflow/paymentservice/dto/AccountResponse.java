@@ -8,5 +8,7 @@ import java.math.BigDecimal;
 @Getter
 @Setter
 public class AccountResponse {
+    private Long userId;
+    private String accountNumber;
     private BigDecimal balance;
 }

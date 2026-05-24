@@ -6,9 +6,10 @@ import com.payflow.paymentservice.dto.TransferRequest;
 import java.util.List;
 
 public interface PaymentService {
-    PaymentResponse transfer(TransferRequest request);
 
-    List<PaymentResponse> findAll();
+    PaymentResponse transfer(Long userId, TransferRequest request);
 
-    PaymentResponse findById(Long id);
+    List<PaymentResponse> findAllForUser(Long userId);
+
+    PaymentResponse findByIdForUser(Long id, Long userId);
 }

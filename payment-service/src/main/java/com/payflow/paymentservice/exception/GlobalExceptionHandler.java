@@ -47,8 +47,8 @@ public class GlobalExceptionHandler {
         );
     }
 
-    @ExceptionHandler(BalanceNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleBalanceNotFound(BalanceNotFoundException ex) {
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleAccountNotFound(AccountNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
                 Map.of(
                         ERROR_KEY, ex.getMessage(),
