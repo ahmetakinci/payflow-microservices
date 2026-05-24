@@ -3,6 +3,11 @@ package com.payflow.paymentservice.repository;
 import com.payflow.paymentservice.entity.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface PaymentRepository extends JpaRepository<Payment,Long> {
+import java.util.Collection;
+import java.util.List;
 
+public interface PaymentRepository extends JpaRepository<Payment, Long> {
+
+    List<Payment> findBySenderAccountNumberInOrReceiverAccountNumberIn(
+            Collection<String> senderNumbers, Collection<String> receiverNumbers);
 }

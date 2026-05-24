@@ -1,12 +1,13 @@
 package com.payflow.paymentservice.service;
 
 import com.payflow.paymentservice.client.AccountServiceClient;
+import com.payflow.paymentservice.dto.AccountResponse;
 import com.payflow.paymentservice.dto.PaymentEvent;
 import com.payflow.paymentservice.dto.PaymentResponse;
 import com.payflow.paymentservice.dto.TransferRequest;
 import com.payflow.paymentservice.entity.Payment;
 import com.payflow.paymentservice.enums.PaymentStatus;
-import com.payflow.paymentservice.exception.BalanceNotFoundException;
+import com.payflow.paymentservice.exception.AccountNotFoundException;
 import com.payflow.paymentservice.exception.InsufficientBalanceException;
 import com.payflow.paymentservice.exception.PaymentFailedException;
 import com.payflow.paymentservice.exception.PaymentNotFoundException;
@@ -15,8 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,12 +29,12 @@ public class PaymentServiceImpl implements PaymentService {
     private final KafkaTemplate<String, PaymentEvent> kafkaTemplate;
 
     @Override
-    public PaymentResponse transfer(TransferRequest request) {
-        BigDecimal balance = accountServiceClient.getBalance(request.getSenderAccountNumber());
-        if (balance == null) {
-            throw new BalanceNotFoundException(request.getSenderAccountNumber());
+    public PaymentResponse transfer(Long userId, TransferRequest request) {
+        AccountResponse sender = accountServiceClient.getAccount(request.getSenderAccountNumber());
+        if (!userId.equals(sender.getUserId())) {
+            throw new AccountNotFoundException(request.getSenderAccountNumber());
         }
-        if (balance.compareTo(request.getAmount()) < 0) {
+        if (sender.getBalance().compareTo(request.getAmount()) < 0) {
             throw new InsufficientBalanceException(request.getSenderAccountNumber());
         }
 
@@ -74,17 +76,36 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
-    public List<PaymentResponse> findAll() {
-        return paymentRepository.findAll()
+    public List<PaymentResponse> findAllForUser(Long userId) {
+        Set<String> userAccounts = userAccountNumbers(userId);
+        if (userAccounts.isEmpty()) {
+            return List.of();
+        }
+        return paymentRepository
+                .findBySenderAccountNumberInOrReceiverAccountNumberIn(userAccounts, userAccounts)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     @Override
-    public PaymentResponse findById(Long id) {
-        Payment findById = paymentRepository.findById(id).orElseThrow(() -> new PaymentNotFoundException(id));
-        return toResponse(findById);
+    public PaymentResponse findByIdForUser(Long id, Long userId) {
+        Payment payment = paymentRepository.findById(id)
+                .orElseThrow(() -> new PaymentNotFoundException(id));
+
+        Set<String> userAccounts = userAccountNumbers(userId);
+        if (!userAccounts.contains(payment.getSenderAccountNumber())
+                && !userAccounts.contains(payment.getReceiverAccountNumber())) {
+            throw new PaymentNotFoundException(id);
+        }
+        return toResponse(payment);
+    }
+
+    private Set<String> userAccountNumbers(Long userId) {
+        return accountServiceClient.getAccountsByUser(userId)
+                .stream()
+                .map(AccountResponse::getAccountNumber)
+                .collect(Collectors.toSet());
     }
 
     private PaymentResponse toResponse(Payment payment) {
@@ -98,5 +119,4 @@ public class PaymentServiceImpl implements PaymentService {
                 .createdDate(payment.getCreatedDate())
                 .build();
     }
-
 }
