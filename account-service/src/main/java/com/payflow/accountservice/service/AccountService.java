@@ -8,20 +8,19 @@ import java.util.List;
 
 public interface AccountService {
 
-    AccountResponse createAccount(CreateAccountRequest request);
-
-    List<AccountResponse> findAll();
-
-    AccountResponse findById(Long id);
+    AccountResponse createAccount(Long userId, CreateAccountRequest request);
 
     List<AccountResponse> findByUserId(Long userId);
 
-    void deleteById(Long id);
+    AccountResponse findByIdForUser(Long id, Long userId);
+
+    void deleteByIdForUser(Long id, Long userId);
+
+    AccountResponse findByAccountNumberForUser(String accountNumber, Long userId);
 
     AccountResponse findByAccountNumber(String accountNumber);
 
     void debit(String accountNumber, BigDecimal amount);
 
     void credit(String accountNumber, BigDecimal amount);
-
 }

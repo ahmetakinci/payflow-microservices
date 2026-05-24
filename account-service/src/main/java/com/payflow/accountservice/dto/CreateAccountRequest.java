@@ -1,6 +1,7 @@
 package com.payflow.accountservice.dto;
 
 import com.payflow.accountservice.enums.AccountType;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,7 +9,6 @@ import lombok.Setter;
 @Setter
 public class CreateAccountRequest {
 
+    @NotNull
     private AccountType accountType;
-
-    private Long userId;
 }

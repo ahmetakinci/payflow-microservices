@@ -27,15 +27,15 @@ public class AccountServiceImpl implements AccountService {
     private static final Random RANDOM = new Random();
 
     @Override
-    public AccountResponse createAccount(CreateAccountRequest request) {
-        if (!userServiceClient.userExists(request.getUserId())) {
-            throw new UserNotFoundException(request.getUserId());
+    public AccountResponse createAccount(Long userId, CreateAccountRequest request) {
+        if (!userServiceClient.userExists(userId)) {
+            throw new UserNotFoundException(userId);
         }
 
         String accountNumber = generateAccountNumber();
 
         Account account = Account.builder()
-                .userId(request.getUserId())
+                .userId(userId)
                 .accountNumber(accountNumber)
                 .accountType(request.getAccountType())
                 .balance(BigDecimal.ZERO)
@@ -43,20 +43,6 @@ public class AccountServiceImpl implements AccountService {
 
         Account saved = accountRepository.save(account);
         return toResponse(saved);
-    }
-
-    @Override
-    public List<AccountResponse> findAll() {
-        return accountRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    @Override
-    public AccountResponse findById(Long id) {
-        Account findById = accountRepository.findById(id).orElseThrow(() -> new AccountNotFoundException(id));
-        return toResponse(findById);
     }
 
     @Override
@@ -68,16 +54,69 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void deleteById(Long id) {
-        accountRepository.deleteById(id);
+    public AccountResponse findByIdForUser(Long id, Long userId) {
+        return toResponse(loadOwnedById(id, userId));
+    }
+
+    @Override
+    public void deleteByIdForUser(Long id, Long userId) {
+        Account account = loadOwnedById(id, userId);
+        accountRepository.delete(account);
+    }
+
+    @Override
+    public AccountResponse findByAccountNumberForUser(String accountNumber, Long userId) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+        if (!account.getUserId().equals(userId)) {
+            throw new AccountNotFoundException(accountNumber);
+        }
+        return toResponse(account);
+    }
+
+    @Override
+    public AccountResponse findByAccountNumber(String accountNumber) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+        return toResponse(account);
+    }
+
+    @Override
+    public void debit(String accountNumber, BigDecimal amount) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+
+        if (amount.compareTo(account.getBalance()) > 0) {
+            throw new InsufficientBalanceException(accountNumber);
+        }
+
+        account.setBalance(account.getBalance().subtract(amount));
+        accountRepository.save(account);
+    }
+
+    @Override
+    public void credit(String accountNumber, BigDecimal amount) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
+
+        account.setBalance(account.getBalance().add(amount));
+        accountRepository.save(account);
+    }
+
+    private Account loadOwnedById(Long id, Long userId) {
+        Account account = accountRepository.findById(id)
+                .orElseThrow(() -> new AccountNotFoundException(id));
+        if (!account.getUserId().equals(userId)) {
+            throw new AccountNotFoundException(id);
+        }
+        return account;
     }
 
     private String generateAccountNumber() {
-
         for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < 16; i++) {
-                sb.append(RANDOM.nextInt(10)); // 0-9 arası rakam
+                sb.append(RANDOM.nextInt(10));
             }
             String accountNumber = sb.toString();
 
@@ -97,36 +136,5 @@ public class AccountServiceImpl implements AccountService {
                 .accountType(account.getAccountType())
                 .createdDate(account.getCreatedDate())
                 .build();
-    }
-
-    @Override
-    public AccountResponse findByAccountNumber(String accountNumber) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-        return toResponse(account);
-    }
-
-    @Override
-    public void debit(String accountNumber, BigDecimal amount) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-
-        if (amount.compareTo(account.getBalance()) > 0){
-            throw new InsufficientBalanceException(accountNumber);
-        }
-
-        account.setBalance(account.getBalance().subtract(amount));
-
-        accountRepository.save(account);
-    }
-
-    @Override
-    public void credit(String accountNumber, BigDecimal amount) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
-                .orElseThrow(() -> new AccountNotFoundException(accountNumber));
-
-        account.setBalance(account.getBalance().add(amount));
-
-        accountRepository.save(account);
     }
 }
